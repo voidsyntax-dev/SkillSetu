@@ -1,0 +1,274 @@
+// SkillSetu persistence layer.
+// The learning catalog (branches, careers, skills, subskills, questions,
+// internships) lives in src/data/catalog as typed code. The database only
+// stores per-user state, so there is nothing to seed.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String?   @unique
+  name           String    @default("Guest Learner")
+  passwordHash   String?
+  isGuest        Boolean   @default(true)
+  branchId       String?
+  targetCareerId String?
+  dailyGoal      Int       @default(10) // questions per day
+  currentStreak  Int       @default(0)
+  longestStreak  Int       @default(0)
+  lastActiveDay  String? // YYYY-MM-DD (local server day)
+  onboarded      Boolean   @default(false)
+  streakFreezes  Int       @default(1) // a freeze keeps the streak alive over one missed day
+  resume         String? // JSON: extra resume fields the learner fills in
+  createdAt      DateTime  @default(now())
+
+  states       SubskillState[]
+  attempts     Attempt[]
+  activities   DailyActivity[]
+  badges       Badge[]
+  proofs       Proof[]
+  resources    ResourceProgress[]
+  bookmarks    Bookmark[]
+  notes        Note[]
+  memberships  GroupMember[]
+  challenges   Challenge[]
+  results      ChallengeResult[]
+  plan         StudyPlan?
+  dailyAnswers DailyAnswer[]
+  testResults  TestResult[]
+}
+
+// ─── Study groups / classes ────────────────────────────────────────────────
+
+model Group {
+  id          String        @id @default(cuid())
+  name        String
+  code        String        @unique // join code, e.g. "THERMO-4K2Q"
+  ownerId     String
+  createdAt   DateTime      @default(now())
+  members     GroupMember[]
+  assignments Assignment[]
+}
+
+model GroupMember {
+  id       String   @id @default(cuid())
+  groupId  String
+  userId   String
+  role     String   @default("member") // owner | member
+  joinedAt DateTime @default(now())
+  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+}
+
+model Assignment {
+  id        String   @id @default(cuid())
+  groupId   String
+  skillId   String
+  title     String
+  dueDay    String // YYYY-MM-DD
+  createdAt DateTime @default(now())
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+}
+
+// ─── Head-to-head challenges ───────────────────────────────────────────────
+
+model Challenge {
+  id          String            @id @default(cuid())
+  code        String            @unique
+  creatorId   String
+  skillId     String
+  questionIds String // JSON array
+  createdAt   DateTime          @default(now())
+  creator     User              @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  results     ChallengeResult[]
+}
+
+model ChallengeResult {
+  id          String    @id @default(cuid())
+  challengeId String
+  userId      String
+  score       Int
+  total       Int
+  timeMs      Int
+  createdAt   DateTime  @default(now())
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, userId])
+}
+
+// ─── Timed tests (GATE mocks, aptitude) ────────────────────────────────────
+
+model TestResult {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String // GATE | APTITUDE
+  scope     String // branch or topic id
+  marks     Float
+  maxMarks  Float
+  correct   Int
+  wrong     Int
+  skipped   Int
+  timeMs    Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── Exam planner ──────────────────────────────────────────────────────────
+
+model StudyPlan {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  examName  String
+  examDay   String // YYYY-MM-DD
+  skillIds  String // JSON array
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── Question of the day ───────────────────────────────────────────────────
+
+model DailyAnswer {
+  id         String   @id @default(cuid())
+  day        String
+  userId     String
+  questionId String
+  selected   String
+  correct    Boolean
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([day, userId])
+  @@index([day, questionId])
+}
+
+// ─── Admin-authored content ────────────────────────────────────────────────
+
+model CustomQuestion {
+  id          String   @id @default(cuid())
+  skillId     String
+  subskillId  String
+  question    String
+  answer      String
+  distractors String // JSON array of 3
+  explanation String
+  difficulty  Int      @default(2)
+  authorId    String
+  createdAt   DateTime @default(now())
+
+  @@index([skillId, subskillId])
+}
+
+model Bookmark {
+  id         String   @id @default(cuid())
+  userId     String
+  skillId    String
+  subskillId String
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId, subskillId])
+}
+
+model Note {
+  id         String   @id @default(cuid())
+  userId     String
+  skillId    String
+  subskillId String
+  body       String
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId, subskillId])
+}
+
+model SubskillState {
+  id              String   @id @default(cuid())
+  userId          String
+  skillId         String
+  subskillId      String
+  score           Float // mastery 0-100 at lastPracticedAt (before decay)
+  lastPracticedAt DateTime
+  attemptCount    Int      @default(0)
+  correctCount    Int      @default(0)
+  streak          Int      @default(0) // consecutive correct answers
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId, subskillId])
+}
+
+model Attempt {
+  id          String   @id @default(cuid())
+  userId      String
+  questionId  String
+  skillId     String
+  subskillId  String
+  isCorrect   Boolean
+  timeTakenMs Int
+  gain        Float
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model DailyActivity {
+  id                String @id @default(cuid())
+  userId            String
+  day               String // YYYY-MM-DD
+  questionsAnswered Int    @default(0)
+  correctAnswers    Int    @default(0)
+  masteryGained     Float  @default(0)
+  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, day])
+}
+
+model Badge {
+  id       String   @id @default(cuid())
+  userId   String
+  code     String
+  earnedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, code])
+}
+
+model Proof {
+  id          String   @id @default(cuid())
+  userId      String
+  kind        String // SUBSKILL | SKILL
+  skillId     String
+  subskillId  String?
+  title       String
+  description String
+  score       Int
+  accuracy    Int
+  attempts    Int
+  hash        String
+  earnedAt    DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind, skillId, subskillId])
+}
+
+model ResourceProgress {
+  id         String   @id @default(cuid())
+  userId     String
+  resourceId String
+  completed  Boolean  @default(false)
+  liked      Boolean?
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, resourceId])
+}

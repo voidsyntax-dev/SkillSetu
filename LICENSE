@@ -1,0 +1,57 @@
+PROPRIETARY SOFTWARE LICENSE — ALL RIGHTS RESERVED
+
+Copyright (c) 2026 Anant Mukherjee. All rights reserved.
+
+SkillSetu (the "Software") includes its source code, curriculum content, question
+banks, numerical problem generators, documentation, design and all other materials
+in this repository (together, the "Materials").
+
+1. OWNERSHIP
+   The Materials are the exclusive property of the copyright holder. Nothing in this
+   license transfers any ownership or intellectual property right to any person.
+
+2. NO LICENSE GRANTED
+   No license, right or permission is granted to use, copy, reproduce, run, host,
+   modify, merge, publish, distribute, sublicense, sell, rent, lease, or create
+   derivative works of the Materials, in whole or in part, for any purpose, whether
+   commercial or non-commercial, without prior written permission from the copyright
+   holder.
+
+3. PROHIBITED ACTIVITIES
+   Without prior written permission, you must not:
+   a) copy or clone the Software, or any part of it, into another project or service;
+   b) deploy, operate or offer the Software, or a substantially similar product, to
+      users, students, institutions or the public;
+   c) reuse the curriculum, questions, explanations, numerical problem templates or
+      other content in any other product, course, book, website or training material;
+   d) remove, alter or obscure any copyright or ownership notice;
+   e) use the Materials to train, fine-tune or evaluate any machine learning model;
+   f) reverse engineer, decompile or attempt to extract source code from a deployed
+      build, except where applicable law expressly forbids this restriction.
+
+4. VIEWING
+   Viewing the source code in this repository for evaluation, such as recruitment or
+   technical review, does not grant any right to use it. Reviewers must not run,
+   copy or redistribute it without written permission.
+
+5. PERMISSION REQUESTS
+   To request permission for any use not allowed above, contact the copyright holder
+   in writing. Permission, if given, must be in writing and may be subject to terms.
+
+6. NO WARRANTY
+   THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+   PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+
+7. LIMITATION OF LIABILITY
+   TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE COPYRIGHT HOLDER SHALL NOT BE LIABLE FOR
+   ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM OR IN CONNECTION WITH THE
+   MATERIALS OR THEIR USE.
+
+8. TERMINATION
+   Any use in breach of this license is unauthorised and may be pursued under applicable
+   copyright and intellectual property laws.
+
+9. GOVERNING LAW
+   This license is governed by the laws of India, without regard to conflict-of-law
+   principles.
